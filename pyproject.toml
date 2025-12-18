@@ -36,7 +36,7 @@ classifiers = [  #! Update me
 
 [tool.poetry.scripts]
 # Entry points for the package https://python-poetry.org/docs/pyproject/#scripts
-"hyperliquid-python-sdk" = "hyperliquid.__main__:app"
+"hyperliquid" = "hyperliquid.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -45,6 +45,7 @@ eth-account = ">=0.10.0,<0.14.0"
 websocket-client = "^1.5.1"
 requests = "^2.31.0"
 msgpack = "^1.0.5"
+ledgereth = "^0.10.0"
 
 [tool.poetry.group.dev.dependencies]
 python = "^3.10"

@@ -132,6 +132,12 @@ TOKEN_DELEGATE_TYPES = [
     {"name": "nonce", "type": "uint64"},
 ]
 
+C_DEPOSIT_SIGN_TYPES = [
+    {"name": "hyperliquidChain", "type": "string"},
+    {"name": "wei", "type": "uint64"},
+    {"name": "nonce", "type": "uint64"},
+]
+
 CONVERT_TO_MULTI_SIG_USER_SIGN_TYPES = [
     {"name": "hyperliquidChain", "type": "string"},
     {"name": "signers", "type": "string"},
@@ -431,10 +437,39 @@ def sign_token_delegate_action(wallet, action, is_mainnet):
     )
 
 
+def sign_c_deposit_action(wallet, action, is_mainnet):
+    return sign_user_signed_action(
+        wallet,
+        action,
+        C_DEPOSIT_SIGN_TYPES,
+        "HyperliquidTransaction:CDeposit",
+        is_mainnet,
+    )
+
+
+def sign_c_withdraw_action(wallet, action, is_mainnet):
+    return sign_user_signed_action(
+        wallet,
+        action,
+        C_DEPOSIT_SIGN_TYPES,  # Same types as cDeposit
+        "HyperliquidTransaction:CWithdraw",
+        is_mainnet,
+    )
+
 def sign_inner(wallet, data):
-    structured_data = encode_typed_data(full_message=data)
-    signed = wallet.sign_message(structured_data)
-    return {"r": to_hex(signed["r"]), "s": to_hex(signed["s"]), "v": signed["v"]}
+    """
+    Sign EIP-712 typed data with either a LocalAccount or LedgerSigner.
+    """
+    # Check if this is a Ledger wallet (has sign_typed_data method)
+    if hasattr(wallet, 'sign_typed_data'):
+        # Use Ledger's native typed data signing
+        return wallet.sign_typed_data(data)
+    else:
+        # Original eth_account signing path
+        structured_data = encode_typed_data(full_message=data)
+        signed = wallet.sign_message(structured_data)
+        return {"r": to_hex(signed["r"]), "s": to_hex(signed["s"]), "v": signed["v"]}
+
 
 
 def recover_agent_or_user_from_l1_action(action, signature, active_pool, nonce, expires_after, is_mainnet):

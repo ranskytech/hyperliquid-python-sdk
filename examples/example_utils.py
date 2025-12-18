@@ -7,16 +7,26 @@ from eth_account.signers.local import LocalAccount
 
 from hyperliquid.exchange import Exchange
 from hyperliquid.info import Info
+from hyperliquid.utils.ledger_signer import LedgerSigner
 
+def setup(base_url=None, skip_ws=False, perp_dexs=None, use_ledger=False, ledger_account_path="44'/60'/0'/0/0"):
 
-def setup(base_url=None, skip_ws=False, perp_dexs=None):
-    config_path = os.path.join(os.path.dirname(__file__), "config.json")
-    with open(config_path) as f:
-        config = json.load(f)
-    account: LocalAccount = eth_account.Account.from_key(get_secret_key(config))
-    address = config["account_address"]
-    if address == "":
+    if use_ledger:
+        # Use Ledger hardware wallet
+        print("Connecting to Ledger device...")
+        account = LedgerSigner(account_path=ledger_account_path)
         address = account.address
+        print(f"Using Ledger address: {address}")
+    else:
+        config_path = os.path.join(os.path.dirname(__file__), "config.json")
+        with open(config_path) as f:
+            config = json.load(f)
+        # Original software wallet path
+        account = eth_account.Account.from_key(get_secret_key(config))
+        address = config["account_address"]
+        if address == "":
+            address = account.address
+    
     print("Running with account address:", address)
     if address != account.address:
         print("Running with agent address:", account.address)

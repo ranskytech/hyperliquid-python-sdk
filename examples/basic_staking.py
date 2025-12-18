@@ -4,9 +4,18 @@ import example_utils
 
 from hyperliquid.utils import constants
 
+# Set to True to use Ledger hardware wallet for signing
+USE_LEDGER = True 
+LEDGER_ACCOUNT_PATH = "44'/60'/11'/0/0"  # Default Ethereum derivation path
+
 
 def main():
-    address, info, exchange = example_utils.setup(base_url=constants.MAINNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(
+        base_url=constants.MAINNET_API_URL,
+        skip_ws=True,
+        use_ledger=USE_LEDGER,
+        ledger_account_path=LEDGER_ACCOUNT_PATH,
+    )
 
     # Get the user staking summary and print information
     user_staking_summary = info.user_staking_summary(address)
@@ -14,9 +23,9 @@ def main():
     print(json.dumps(user_staking_summary, indent=2))
 
     # Get the user staking delegations and print information
-    user_stakes = info.user_stakes(address)
+    user_delegations = info.user_staking_delegations(address)
     print("Staking breakdown:")
-    print(json.dumps(user_stakes, indent=2))
+    print(json.dumps(user_delegations, indent=2))
 
     # Get the user staking reward history and print information
     user_staking_rewards = info.user_staking_rewards(address)

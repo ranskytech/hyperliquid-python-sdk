@@ -24,6 +24,8 @@ from hyperliquid.utils.signing import (
     order_wires_to_order_action,
     sign_agent,
     sign_approve_builder_fee,
+    sign_c_deposit_action,
+    sign_c_withdraw_action,
     sign_convert_to_multi_sig_user_action,
     sign_l1_action,
     sign_multi_sig_action,
@@ -592,6 +594,46 @@ class Exchange(API):
         }
         is_mainnet = self.base_url == MAINNET_API_URL
         signature = sign_token_delegate_action(self.wallet, action, is_mainnet)
+        return self._post_action(
+            action,
+            signature,
+            timestamp,
+        )
+
+    def c_deposit(self, wei: int) -> Any:
+        """Transfer native token from the user spot account into staking for delegating to validators.
+
+        Args:
+            wei (int): Amount of wei to deposit into staking balance (float * 1e8).
+        """
+        timestamp = get_timestamp_ms()
+        action = {
+            "type": "cDeposit",
+            "wei": wei,
+            "nonce": timestamp,
+        }
+        is_mainnet = self.base_url == MAINNET_API_URL
+        signature = sign_c_deposit_action(self.wallet, action, is_mainnet)
+        return self._post_action(
+            action,
+            signature,
+            timestamp,
+        )
+
+    def c_withdraw(self, wei: int) -> Any:
+        """Transfer native token from staking into the user's spot account.
+
+        Args:
+            wei (int): Amount of wei to withdraw from staking balance (float * 1e8).
+        """
+        timestamp = get_timestamp_ms()
+        action = {
+            "type": "cWithdraw",
+            "wei": wei,
+            "nonce": timestamp,
+        }
+        is_mainnet = self.base_url == MAINNET_API_URL
+        signature = sign_c_withdraw_action(self.wallet, action, is_mainnet)
         return self._post_action(
             action,
             signature,

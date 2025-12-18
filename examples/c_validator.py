@@ -13,7 +13,12 @@ DUMMY_SIGNER = "0x0000000000000000000000000000000000000001"
 
 
 def main():
-    address, info, exchange = example_utils.setup(constants.TESTNET_API_URL, skip_ws=True)
+    address, info, exchange = example_utils.setup(
+        constants.TESTNET_API_URL, 
+        skip_ws=True,
+        use_ledger=True,
+        ledger_account_path="44'/60'/26'/0/0",
+    )
 
     if ACTION == "Register":
         node_ip = "1.2.3.4"
