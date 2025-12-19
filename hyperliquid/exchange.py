@@ -1038,7 +1038,7 @@ class Exchange(API):
                     "description": description,
                     "delegations_disabled": delegations_disabled,
                     "commission_bps": commission_bps,
-                    "signer": signer,
+                    "signer": signer.lower(),
                 },
                 "unjailed": unjailed,
                 "initial_wei": initial_wei,
@@ -1078,7 +1078,7 @@ class Exchange(API):
                 "unjailed": unjailed,
                 "disable_delegations": disable_delegations,
                 "commission_bps": commission_bps,
-                "signer": signer,
+                "signer": None if signer is None else signer.lower(),
             },
         }
         signature = sign_l1_action(

@@ -5,13 +5,17 @@ import example_utils
 from hyperliquid.utils import constants
 
 # Set to True to use Ledger hardware wallet for signing
-USE_LEDGER = True 
-LEDGER_ACCOUNT_PATH = "44'/60'/11'/0/0"  # Default Ethereum derivation path
+USE_LEDGER = True
+LEDGER_ACCOUNT_PATH = "44'/60'/27'/0/0"  # Default Ethereum derivation path
+
+# Set to True to use testnet instead of mainnet
+USE_TESTNET = True
 
 
 def main():
+    base_url = constants.TESTNET_API_URL if USE_TESTNET else constants.MAINNET_API_URL
     address, info, exchange = example_utils.setup(
-        base_url=constants.MAINNET_API_URL,
+        base_url=base_url,
         skip_ws=True,
         use_ledger=USE_LEDGER,
         ledger_account_path=LEDGER_ACCOUNT_PATH,

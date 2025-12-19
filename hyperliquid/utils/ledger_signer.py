@@ -45,15 +45,10 @@ class LedgerSigner:
         Returns:
             Dict with r, s, v signature components
         """
-        domain_data = typed_data["domain"]
-        message_types = typed_data["types"]
-        message_data = typed_data["message"]
+        # Use full_message form to preserve primaryType (important for L1 actions)
+        # This ensures the encoding matches what the verifier expects
+        signable = encode_typed_data(full_message=typed_data)
 
-        # Remove EIP712Domain from types (eth_account adds it automatically)
-        signing_types = {k: v for k, v in message_types.items() if k != "EIP712Domain"}
-
-        # Encode the typed data to get domain hash and message hash
-        signable = encode_typed_data(domain_data, signing_types, message_data)
         # Pass raw bytes - ledgereth expects 32-byte hashes, not hex strings
         domain_hash = bytes(signable.header)
         message_hash = bytes(signable.body)

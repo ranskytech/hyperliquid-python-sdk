@@ -59,6 +59,64 @@ def get_ledger_account_path(account_index: int) -> str:
     return f"44'/60'/{account_index}'/0/0"
 
 
+def normalize_validator_register_params(params: dict) -> dict:
+    """
+    Normalize cValidatorRegister params to flat format.
+    Supports both flat format and nested API format.
+    """
+    # Check if it's the nested API format
+    if "register" in params:
+        reg = params["register"]
+        profile = reg.get("profile", {})
+        # Extract node_ip from {"Ip": "..."} format if present
+        node_ip = profile.get("node_ip")
+        if isinstance(node_ip, dict) and "Ip" in node_ip:
+            node_ip = node_ip["Ip"]
+        return {
+            "node_ip": node_ip,
+            "name": profile.get("name"),
+            "description": profile.get("description"),
+            "delegations_disabled": profile.get("delegations_disabled", False),
+            "commission_bps": profile.get("commission_bps", 0),
+            "signer": profile.get("signer"),
+            "unjailed": reg.get("unjailed", True),
+            "initial_wei": reg.get("initial_wei"),
+        }
+    # Already flat format, but handle node_ip if it's {"Ip": "..."} format
+    if isinstance(params.get("node_ip"), dict) and "Ip" in params["node_ip"]:
+        params = params.copy()
+        params["node_ip"] = params["node_ip"]["Ip"]
+    return params
+
+
+def normalize_validator_change_profile_params(params: dict) -> dict:
+    """
+    Normalize cValidatorChangeProfile params to flat format.
+    Supports both flat format and nested API format.
+    """
+    # Check if it's the nested API format
+    if "changeProfile" in params:
+        cp = params["changeProfile"]
+        # Extract node_ip from {"Ip": "..."} format if present
+        node_ip = cp.get("node_ip")
+        if isinstance(node_ip, dict) and "Ip" in node_ip:
+            node_ip = node_ip["Ip"]
+        return {
+            "node_ip": node_ip,
+            "name": cp.get("name"),
+            "description": cp.get("description"),
+            "unjailed": cp.get("unjailed", True),
+            "disable_delegations": cp.get("disable_delegations"),
+            "commission_bps": cp.get("commission_bps"),
+            "signer": cp.get("signer"),
+        }
+    # Already flat format, but handle node_ip if it's {"Ip": "..."} format
+    if isinstance(params.get("node_ip"), dict) and "Ip" in params["node_ip"]:
+        params = params.copy()
+        params["node_ip"] = params["node_ip"]["Ip"]
+    return params
+
+
 def confirm_action(action_description: str) -> None:
     """Print action details and wait for user confirmation before signing."""
     print()
@@ -174,6 +232,12 @@ Examples:
             print(f"Error: Invalid JSON: {e}", file=sys.stderr)
             sys.exit(1)
 
+        # Normalize JSON params based on command
+        if args.command == "cValidatorRegister":
+            json_params = normalize_validator_register_params(json_params)
+        elif args.command == "cValidatorChangeProfile":
+            json_params = normalize_validator_change_profile_params(json_params)
+
     # Build action description and confirm before signing
     if args.command == "cDeposit":
         action_desc = f"Deposit {args.wei} wei into staking"
@@ -233,6 +297,29 @@ Examples:
         print(json.dumps(result, indent=2))
     except KeyError as e:
         print(f"Error: Missing required JSON field: {e}", file=sys.stderr)
+        if args.command == "cValidatorRegister":
+            print("\nExpected JSON format for cValidatorRegister:", file=sys.stderr)
+            print(json.dumps({
+                "node_ip": "1.2.3.4",
+                "name": "Validator Name",
+                "description": "Description",
+                "delegations_disabled": False,
+                "commission_bps": 1000,
+                "signer": "0x...",
+                "unjailed": True,
+                "initial_wei": 100000000,
+            }, indent=2), file=sys.stderr)
+        elif args.command == "cValidatorChangeProfile":
+            print("\nExpected JSON format for cValidatorChangeProfile:", file=sys.stderr)
+            print(json.dumps({
+                "unjailed": True,
+                "node_ip": "1.2.3.4 (optional)",
+                "name": "null or string (optional)",
+                "description": "null or string (optional)",
+                "disable_delegations": "null or bool (optional)",
+                "commission_bps": "null or int (optional)",
+                "signer": "null or address (optional)",
+            }, indent=2), file=sys.stderr)
         sys.exit(1)
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
